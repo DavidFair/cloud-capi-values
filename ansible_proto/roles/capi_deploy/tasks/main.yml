@@ -1,0 +1,3 @@
+- include_tasks: file=clusterctl.yml
+- include_tasks: file=creds.yml
+- include_tasks: file=deploy_capi.yml

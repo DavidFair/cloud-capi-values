@@ -1,0 +1,12 @@
+- name: Add Grafana Helm repo
+  kubernetes.core.helm_repository:
+    name: grafana
+    repo_url: "https://grafana.github.io/helm-charts"
+    kubeconfig: "{{ kubeconfig_target }}"
+
+- name: Install Loki-stack Chart
+  kubernetes.core.helm:
+    name: loki
+    namespace: default
+    chart_ref: grafana/loki-stack
+    kubeconfig: "{{ kubeconfig_target }}"

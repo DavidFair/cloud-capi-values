@@ -1,0 +1,89 @@
+- name: Install helm
+  community.general.snap:
+    name: helm
+    classic: yes
+  become: true
+
+- name: Add the core CAPI Helm repository
+  kubernetes.core.helm_repository:
+    name: capi-charts
+    url: https://stackhpc.github.io/capi-helm-charts
+    kubeconfig: "{{ management_kubeconfig_path }}"
+
+- name: Add the CAPI add-ons for core infra (e.g. CNI)
+  kubernetes.core.helm_repository:
+    name: capi-addons
+    url: https://stackhpc.github.io/cluster-api-addon-provider
+    kubeconfig: "{{ management_kubeconfig_path }}"
+
+- name: Deploy the add-ons chart
+  kubernetes.core.helm:
+    name: cluster-api-addon-provider
+    chart_ref: capi-addons/cluster-api-addon-provider
+    chart_version: "{{ capi_addons_version }}"
+    release_namespace: clusters
+    create_namespace: true
+    update_repo_cache: true
+    kubeconfig: "{{ management_kubeconfig_path }}"
+    wait: true
+    timeout: 120s # Addons should be relatively quick to deploy
+
+- name: Start the CAPI cluster. This may take up to 10 minutes...
+  block:
+    - name: Install the CAPI cluster
+      kubernetes.core.helm:
+        name: "{{ target_cluster_name }}"
+        chart_ref: capi-charts/openstack-cluster
+        release_namespace: clusters
+        update_repo_cache: true
+        kubeconfig: "{{ management_kubeconfig_path }}"
+        wait: false # We'll wait for the cluster to be ready later
+        timeout: 10m
+        values_files:
+          # TODO move these into this role as templates
+          - "{{ capi_values_path }}/values.yaml"
+          - "{{ capi_values_path }}/clouds.yaml"
+          - "{{ capi_values_path }}/user-values.yaml"
+          - "{{ capi_values_path }}/flavors.yaml"
+        values:
+          # Inject the project ID into the values file
+          clouds:
+            openstack:
+              auth:
+                project_id: "{{ project_id }}"
+          apiServer:
+            floatingIP: >-
+              {{-
+                  target_fip if target_fip is defined 
+                  else undef(hint = "An existing floating IP is required, please set 'management_floating_ip' and 'cluster_floating_ip' in the inventory.") 
+              -}}
+          machineSSHKeyName: "{{ keypair_name if deploy_keypair else omit }}"
+
+    - name: Wait for all k8s nodes to be ready...
+      shell: >
+        kubectl wait clusters.cluster.x-k8s.io/{{ target_cluster_name }} 
+        --timeout 0s 
+        --for=condition=ControlPlaneReady 
+        --namespace clusters
+      environment:
+        KUBECONFIG: "{{ management_kubeconfig_path }}"
+      retries: 60 # 10 minutes at 10 second intervals
+      delay: 10
+
+  rescue:
+    - name: Dump the output of CAPO logs to a file
+      shell:
+        cmd: kubectl logs deploy/capo-controller-manager -n capo-system > /tmp/capo-controller-manager.log
+      environment:
+        KUBECONFIG: "{{ management_kubeconfig_path }}"
+
+    - name: Copy the logs to this machine
+      fetch:
+        src: /tmp/capo-controller-manager.log
+        dest: "{{ playbook_dir }}/capo-controller-manager.log"
+        flat: yes
+
+    - fail:
+        msg:
+          "CAPI deployment failed. Please check the logs at {{ playbook_dir }}/capo-controller-manager.log
+          or send them on to Cloud Support for further investigation."

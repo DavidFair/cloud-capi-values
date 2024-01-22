@@ -1,0 +1,28 @@
+- name: Store a temporary copy of the kubeconfig
+  shell:
+    cmd: "clusterctl get kubeconfig {{ management_cluster_name }} -n clusters > /tmp/new_cluster.kubeconfig"
+  environment:
+    KUBECONFIG: "{{ management_kubeconfig_path }}"
+
+- name: Init Openstack CAPI provider on new cluster
+  ansible.builtin.shell: |
+    clusterctl init --infrastructure openstack
+  environment:
+    KUBECONFIG: "/tmp/new_cluster.kubeconfig"
+
+- name: Instruct clusterctl to move the management cluster
+  ansible.builtin.shell: |
+    clusterctl move --to-kubeconfig /tmp/new_cluster.kubeconfig --namespace clusters
+  environment:
+    KUBECONFIG: "{{ management_kubeconfig_path }}"
+  register: clusterctl_result
+
+- name: Print the output from clusterctl
+  debug:
+    var: clusterctl_result
+
+- name: "Move the file to replace the management_cluster.kubeconfig"
+  ansible.builtin.file:
+    src: "/tmp/new_cluster.kubeconfig"
+    dest: "{{ management_kubeconfig_path }}"
+    mode: 0600

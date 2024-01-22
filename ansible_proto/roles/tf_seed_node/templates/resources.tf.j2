@@ -1,0 +1,40 @@
+data "openstack_images_image_v2" "seed_image" {
+  name        = "{{ k3s_ubuntu_image }}"
+  most_recent = true
+}
+
+data "openstack_compute_flavor_v2" "seed_flavor" {
+  name = "{{ k3s_seed_flavor }}"
+}
+
+resource "openstack_networking_secgroup_v2" "kubectl" {
+  name        = "kubectl"
+  description = "Port 6443 open for kubectl"
+}
+
+resource "openstack_networking_secgroup_rule_v2" "kubectl" {
+  direction         = "ingress"
+  ethertype         = "IPv4"
+  protocol          = "tcp"
+  port_range_min    = 6443
+  port_range_max    = 6443
+  remote_ip_prefix  = "0.0.0.0/0"
+  security_group_id = openstack_networking_secgroup_v2.kubectl.id
+}
+
+resource "openstack_compute_instance_v2" "seed_node" {
+  name            = "{{ cluster_name }}_seed"
+  image_id        = data.openstack_images_image_v2.seed_image.id
+  flavor_id       = data.openstack_compute_flavor_v2.seed_flavor.flavor_id
+  security_groups = ["default", openstack_networking_secgroup_v2.kubectl.name]
+  key_pair        = "{{ keypair_name }}"
+
+  network {
+    name = "Internal"
+  }
+
+  metadata = {
+    # Marker so we can easily identify instances created by this setup
+    deployment = "ansible_capi"
+  }
+}

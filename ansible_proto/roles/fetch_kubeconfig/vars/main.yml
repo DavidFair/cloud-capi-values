@@ -1,0 +1,1 @@
+role_kubeconfig_path: "{{ seed_kubeconfig_dir }}/{{ target_cluster_name }}.kubeconfig"

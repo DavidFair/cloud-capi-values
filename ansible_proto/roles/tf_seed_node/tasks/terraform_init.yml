@@ -1,0 +1,20 @@
+# Stripped down version of https://github.com/stackhpc/ansible-collection-terraform/blob/main/roles/infra/tasks/main.yml
+- debug:
+    msg: "Destroying seed infrastructure"
+  when: terraform_state == "absent"
+
+- debug:
+    msg: "Creating seed infrastructure..."
+  when: terraform_state == "present"
+
+- name: Driving Terraform
+  terraform:
+    binary_path: "{{ terraform_binary_path or omit }}"
+    project_path: "{{ terraform_project_path }}"
+    state: "{{ terraform_state }}"
+    force_init: yes
+    init_reconfigure: yes
+  register: terraform_result
+
+- name: Refresh inventory
+  ansible.builtin.meta: refresh_inventory

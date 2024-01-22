@@ -1,2 +1,8 @@
-*kubeconfig*
+.terraform/
+.kube/
+.vscode/
+venv/
+
+*.kubeconfig
 *clouds*.yaml
+capo-controller-manager.log

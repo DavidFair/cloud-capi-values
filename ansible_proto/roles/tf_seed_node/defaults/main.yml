@@ -1,0 +1,6 @@
+k3s_seed_flavor: "l2.tiny"
+k3s_ubuntu_image: "ubuntu-focal-20.04-nogui"
+
+# Note: You will need to manually set this in inventory/openstack.yml if changed
+clouds_yaml_name: "openstack"
+terraform_project_path: "{{ inventory_dir }}/.terraform"

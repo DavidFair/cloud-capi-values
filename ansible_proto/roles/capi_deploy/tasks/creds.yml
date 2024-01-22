@@ -1,0 +1,36 @@
+- name: Copy clouds.yaml from this repo to seed node
+  ansible.builtin.copy:
+    src: "{{ inventory_dir }}/clouds.yaml"
+    dest: "{{ capi_values_path }}/clouds.yaml"
+    mode: 0600
+
+- name: Parse out the project ID from the clouds.yaml file
+  block:
+    - name: Install the Openstack Client to query for the associated project ID
+      apt: name=python3-openstackclient state=present update_cache=true
+      become: true
+
+    - name: Parse the clouds yaml file for the app cred ID
+      set_fact:
+        app_cred_id: "{{ lookup('file', '{{ inventory_dir }}/clouds.yaml') | from_yaml | json_query('clouds.openstack.auth.application_credential_id') }}"
+
+    - name: Query the Openstack API for the associated project ID
+      shell:
+        cmd: "openstack --os-cloud openstack application credential show {{ app_cred_id }} -c project_id -f value"
+        chdir: "{{ capi_values_path }}"
+      register: project_id
+      failed_when: project_id.rc != 0
+
+    - name: Set the project ID
+      set_fact:
+        project_id: "{{ project_id.stdout }}"
+
+    - name: "Print the project ID we'll create the cluster in:"
+      debug:
+        msg: "Project ID: {{ project_id }}"
+  rescue:
+    - fail:
+        msg: >
+          Unable to parse the clouds.yaml file for the associated project ID.
+          Please contact cloud support for assistance.
+      when: app_cred_id is not defined

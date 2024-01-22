@@ -1,0 +1,19 @@
+- hosts: seed
+  roles:
+    - pre_flight
+    - role: capi_deploy
+      vars:  
+        kubeconfig_path: "{{ worker_kubeconfig_path }}"
+        target_cluster_name: "{{ cluster_name }}"
+        target_fip: "{{ cluster_floating_ip }}"
+    - role: fetch_kubeconfig
+      vars:
+        target_cluster_name: "{{ cluster_name }}"
+
+- hosts: seed
+  name: (Optional) Destroy the cluster
+  tags: [destroy, never]
+  roles:
+    - role: capi_destroy
+      vars:
+        target_cluster_name: "{{ cluster_name }}"

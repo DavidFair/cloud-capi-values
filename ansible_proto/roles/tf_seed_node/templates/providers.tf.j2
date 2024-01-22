@@ -1,0 +1,16 @@
+terraform {
+  required_version = ">= 0.14"
+
+  # We need the OpenStack provider
+  required_providers {
+    openstack = {
+      source = "terraform-provider-openstack/openstack"
+      # '~>' syntax allows patch version updates (i.e. matches "1.52.X")
+      version = "~> 1.52.0"
+    }
+  }
+}
+
+provider "openstack" {
+  cloud = "{{ clouds_yaml_name }}"
+}

@@ -1,0 +1,52 @@
+- name: Download k3sup
+  ansible.builtin.get_url:
+    url: "{{ k3sup_url }}"
+    dest: /usr/local/bin/k3sup
+    mode: 0755
+    checksum: "{{ k3sup_checksum }}"
+  become: true
+
+- name: Deploy seed cluster using k3sup
+  ansible.builtin.shell: |
+    k3sup install --local --no-extras
+  register: k3sup_result
+  when: k3sup_installed is not defined
+
+- name: Ensure .kube exists for the current user
+  ansible.builtin.file:
+    path: "/home/{{ ansible_user }}/.kube"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+
+- name: Chown the RKE3 kubeconfig
+  ansible.builtin.file:
+    path: "/etc/rancher/k3s/k3s.yaml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    state: file
+  become: true
+
+- name: Link the kubeconfig to the user's home directory
+  ansible.builtin.file:
+    src: "/etc/rancher/k3s/k3s.yaml"
+    dest: "{{ management_kubeconfig_path }}"
+    state: link
+
+- name: Install kubernetes Python package for Ansible on the seed node
+  block:
+    - name: Install pip
+      apt:
+        name:
+          - python3-pip
+        state: present
+        update_cache: true
+      become: true
+    # We require a newer package than the one provided by Ubuntu repos
+    - name: Install Ansible requirements on seed node
+      pip:
+        name:
+          - kubernetes
+          - pyyaml
+          - openshift
+        state: present

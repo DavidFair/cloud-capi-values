@@ -1,0 +1,30 @@
+- name: Download clusterctl
+  ansible.builtin.get_url:
+    url: "{{ clusterctl_url }}"
+    checksum: "{{ clusterctl_checksum }}"
+    dest: /usr/local/bin/clusterctl
+    mode: 0755
+  become: true
+
+- block:
+    - name: Init openstack provider
+      ansible.builtin.shell: |
+        clusterctl init --infrastructure openstack
+      environment:
+        KUBECONFIG: "{{ management_kubeconfig_path }}"
+        GITHUB_TOKEN: "{{ github_token | default(omit) }}"
+      register: clusterctl_result
+      timeout: 120 # Be aggressive with a 2 minute timeout
+  rescue:
+    - fail:
+        msg: >
+          clusterctl init failed. Have you set a GITHUB_TOKEN?\n
+          Logs: {{ clusterctl_result.stdout }}\n{{ clusterctl_result.stderr }}
+      when: clusterctl_result is failed
+
+- name: Clone git repo with cloud values
+  ansible.builtin.git:
+    repo: "{{ capi_values_repo }}"
+    dest: "{{ capi_values_path }}"
+    version: "{{ capi_values_branch }}"
+    force: yes

@@ -1,0 +1,2 @@
+- include_tasks: file=creds.yml
+- include_tasks: file=kubernetes_exists.yml

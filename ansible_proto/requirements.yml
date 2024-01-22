@@ -1,0 +1,4 @@
+collections:
+  - name: "git+https://github.com/stackhpc/ansible-collection-terraform.git"
+  - name: community.general
+  - name: kubernetes.core

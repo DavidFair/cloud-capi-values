@@ -1,0 +1,3 @@
+ansible
+jmespath  # Used by Terraform module to parse JSON
+openstacksdk

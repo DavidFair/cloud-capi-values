@@ -1,0 +1,24 @@
+- name: Export kubeconfig
+  shell:
+    cmd: "clusterctl get kubeconfig {{ target_cluster_name }} -n clusters > {{ role_kubeconfig_path }}"
+    creates: "{{ role_kubeconfig_path }}"
+  environment:
+    KUBECONFIG: "{{ management_kubeconfig_path }}"
+
+- name: Check the kubectl file is not empty
+  ansible.builtin.stat:
+    path: "{{ role_kubeconfig_path }}"
+  register: kubectl_file
+  failed_when: kubectl_file.stat.size == 0
+
+- name: Create a local dir to backup the kubeconfig
+  ansible.builtin.file:
+    path: "{{ inventory_dir }}/.kube"
+    state: directory
+  delegate_to: localhost
+
+- name: Fetch a copy of the kubeconfig to the inventory directory
+  ansible.builtin.fetch:
+    src: "{{ role_kubeconfig_path }}"
+    dest: "{{ inventory_dir }}/.kube/{{ cluster_name }}.kubeconfig"
+    flat: yes

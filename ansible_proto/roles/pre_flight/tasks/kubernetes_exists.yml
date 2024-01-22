@@ -1,0 +1,11 @@
+- block:
+    - name: Check if kubeconfig exists for the management cluster
+      kubernetes.core.k8s_cluster_info:
+        kubeconfig: "{{ management_kubeconfig_path }}"
+      register: has_valid_kubeconfig
+  rescue:
+    - fail:
+        msg: >
+          No kubeconfig found for the management cluster. 
+          Please run the seed playbook first or ensure a valid kubeconfig is present at {{ management_kubeconfig_path }} 
+          Original error: {{ ansible_failed_result }}

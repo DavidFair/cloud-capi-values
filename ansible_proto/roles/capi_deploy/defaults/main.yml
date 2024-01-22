@@ -1,0 +1,9 @@
+clusterctl_url: https://github.com/kubernetes-sigs/cluster-api/releases/download/v1.6.1/clusterctl-linux-amd64
+clusterctl_checksum: "sha256:238fa9e22ac559d3624569d4de90217dabb28c7ca3f2b4fd08280472aaf131cf"
+
+capi_values_repo: https://github.com/stfc/cloud-capi-values
+capi_values_path: "/home/{{ ansible_user }}/capi-management"
+
+capi_addons_version: "0.3.1"
+# TODO these should be set in the inventory
+capi_values_branch: master

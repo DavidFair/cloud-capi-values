@@ -1,0 +1,14 @@
+- block:
+    - name: "Check if clouds.yaml exists in the repo"
+      ansible.builtin.stat:
+        path: "{{ inventory_dir }}/clouds.yaml"
+      delegate_to: localhost
+      register: clouds_yaml_exists
+      failed_when: clouds_yaml_exists.stat.exists == false
+  rescue:
+    - fail:
+        msg: >
+          clouds.yaml not found in {{ inventory_dir }}/clouds.yaml
+          Please create one in https://openstack.stfc.ac.uk/identity/application_credentials/
+          then place it into {{ inventory_dir }} and try again.
+      when: clouds_yaml_exists is failed

@@ -1,0 +1,19 @@
+keypair_name: ""
+
+cluster_name: ""
+cluster_floating_ip: ""
+
+management_cluster_name: ""
+management_floating_ip: ""
+
+deploy_keypair: false
+
+# This could be pointed elsewhere if you already have an
+# existing kubeconfig file matching the format
+# cluster_name.kubeconfig
+seed_kubeconfig_dir: "/home/{{ ansible_user }}/.kube"
+management_kubeconfig_path: "{{ seed_kubeconfig_dir }}/{{ management_cluster_name | undef(hint='You need to set a cluster name') }}.kubeconfig"
+worker_kubeconfig_path: "{{ seed_kubeconfig_dir }}/{{ cluster_name | undef(hint='You need to set a cluster name') }}.kubeconfig"
+
+# Addons
+deploy_promtail: true

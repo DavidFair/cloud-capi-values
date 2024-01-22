@@ -1,0 +1,14 @@
+- name: Triggering cluster deletion for '{{ target_cluster_name }}'
+  kubernetes.core.helm:
+    kubeconfig: "{{ management_kubeconfig_path }}"
+    state: absent
+    name: "{{ target_cluster_name }}"
+    release_namespace: clusters
+
+- name: Print notice about deleting self-managed cluster
+  debug:
+    msg: >
+      Note: Since the management cluster deletes the VMs which handles
+      deletion you will need to manually delete the networking resources.
+      Contact cloud support if you need help with this.
+  when: target_cluster_name == management_cluster_name
