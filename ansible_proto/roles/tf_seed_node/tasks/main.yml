@@ -1,3 +1,7 @@
+- name: Set terraform to install to user's bin directory
+  set_fact:
+    terraform_binary_directory: "{{ ansible_user_dir }}/.local/bin"
+
 - name: Install Terraform
   ansible.builtin.include_role: name=stackhpc.terraform.install
 

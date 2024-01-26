@@ -14,7 +14,7 @@
 
 - name: Ensure .kube exists for the current user
   ansible.builtin.file:
-    path: "/home/{{ ansible_user }}/.kube"
+    path: "{{ ansible_user_dir }}/.kube"
     state: directory
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"

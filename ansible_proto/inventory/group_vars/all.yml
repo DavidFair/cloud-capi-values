@@ -11,7 +11,7 @@ deploy_keypair: false
 # This could be pointed elsewhere if you already have an
 # existing kubeconfig file matching the format
 # cluster_name.kubeconfig
-seed_kubeconfig_dir: "/home/{{ ansible_user }}/.kube"
+seed_kubeconfig_dir: "{{ ansible_user_dir }}/.kube"
 management_kubeconfig_path: "{{ seed_kubeconfig_dir }}/{{ management_cluster_name | undef(hint='You need to set a cluster name') }}.kubeconfig"
 worker_kubeconfig_path: "{{ seed_kubeconfig_dir }}/{{ cluster_name | undef(hint='You need to set a cluster name') }}.kubeconfig"
 
