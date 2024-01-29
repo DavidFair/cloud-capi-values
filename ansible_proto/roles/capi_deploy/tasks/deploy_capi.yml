@@ -69,6 +69,8 @@
         KUBECONFIG: "{{ management_kubeconfig_path }}"
       retries: 60 # 10 minutes at 10 second intervals
       delay: 10
+      register: cluster_ready
+      until: cluster_ready.rc == 0
 
   rescue:
     - name: Dump the output of CAPO logs to a file
