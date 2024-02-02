@@ -28,7 +28,7 @@ Configuration
 - Add the name of your SSH key to inventory/group_vars/all.yml
 - Set the cluster names in inventory/group_vars/all.yml
 
-This can be ran in one of two modes:
+This can be run in one of two modes:
 
 With a seed node
 -----------------
@@ -81,5 +81,5 @@ This will destroy the seed VM:
 This will destroy the worker cluster:
 - `ansible-playbook playbooks/worker_cluster.yml --tags destroy`
 
-This will partially clean-up the management cluster (but will not remove the worker cluster which would be orphaned if it exists)
+This will partially clean up the management cluster (but will not remove the worker cluster which would be orphaned if it exists)
 - `ansible-playbook playbooks/mgmt_cluster.yml --tags destroy`
